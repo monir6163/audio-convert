@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download Audio</title>
+    <style>
+      /* CSS for the progress bar */
+      #progressBar {
+        width: 100%;
+        height: 10px;
+        background-color: #f0f0f0;
+        margin-top: 10px;
+        display: none; /* Initially hidden */
+      }
+      #progress {
+        width: 0%;
+        height: 100%;
+        background-color: #4caf50;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="videoForm">
+      <input type="text" id="url" placeholder="Enter video URL" />
+      <button type="submit">Download Audio</button>
+      <div id="progressBar">
+        <div id="progress"></div>
+      </div>
+    </form>
+    <div id="downloadLink" style="display: none">
+      <a id="audioDownloadLink" href="" download="audio.mp3">Download Audio</a>
+    </div>
+
+    <script>
+      document
+        .getElementById("videoForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const url = document.getElementById("url").value;
+          const progressBar = document.getElementById("progressBar");
+          const progress = document.getElementById("progress");
+
+          const formData = new FormData();
+          formData.append("url", encodeURIComponent(url));
+
+          try {
+            progressBar.style.display = "block"; // Show the progress bar
+
+            const response = await fetch(
+              "http://localhost:5000/api/downloadAudio",
+              {
+                method: "POST",
+                body: formData,
+                onprogress: (event) => {
+                  const percentage = (event.loaded / event.total) * 100;
+                  progress.style.width = `${percentage}%`;
+                },
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              const downloadLink = document.getElementById("audioDownloadLink");
+              downloadLink.href = data.url;
+              document.getElementById("downloadLink").style.display = "block";
+            } else {
+              console.error("Error downloading audio:", response.statusText);
+            }
+          } catch (error) {
+            console.error("Fetch error:", error);
+          } finally {
+            progressBar.style.display = "none"; // Hide progress bar after completion
+          }
+        });
+    </script>
+  </body>
+</html>
